@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- 1. SEO & CONFIGURATION -->
+    <title>Vitrina TakTak | Solution E-commerce N°1 en Tunisie 🇹🇳</title>
+    <meta name="description" content="Créez votre boutique en ligne gratuitement en Tunisie. Solution SaaS pour automatiser vos commandes WhatsApp. Simple, Rapide, Efficace.">
+    <link rel="canonical" href="https://vitrinataktak.store" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+
+    <!-- OPEN GRAPH -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://vitrinataktak.store">
+    <meta property="og:title" content="Vitrina TakTak - Hanoutek fi Lien">
+    <meta property="og:description" content="Arrêtez de répondre 'Prix ?'. Recevez des commandes claires sur WhatsApp.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80">
+
+    <!-- LIBRARIES -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CONFIG TAILWIND -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: { 
+                    colors: { gold: '#EAB308', dark: '#050505', card: '#121212', surface: '#1A1A1A' }, 
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .hidden { display: none !important; }
+        body { background-color: #050505; color: white; -webkit-tap-highlight-color: transparent; }
+        
+        /* Glassmorphism Navigation */
+        .glass-nav { background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        /* GOLD BUTTON STYLE (Shared) */
+        .btn-gold { 
+            background: linear-gradient(135deg, #EAB308 0%, #CA8A04 100%); 
+            color: black; 
+            font-weight: 800; 
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3); 
+            transition: transform 0.2s, box-shadow 0.2s; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .btn-gold:active { transform: scale(0.97); }
+
+        /* Secondary Button (Outline Style for Contrast but same shape) */
+        .btn-gold-outline {
+            background: transparent;
+            border: 2px solid #EAB308;
+            color: #EAB308;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+        .btn-gold-outline:active { transform: scale(0.97); background: rgba(234, 179, 8, 0.1); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Loader */
+        .loader { width: 48px; height: 48px; border: 3px solid #FFF; border-radius: 50%; display: inline-block; position: relative; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        .loader::after { content: ''; box-sizing: border-box; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; border: 3px solid; border-color: #EAB308 transparent; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* ADSENSE PLACEHOLDERS */
+        .ad-container { width: 100%; min-height: 100px; background: #111; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; margin: 16px 0; border-radius: 8px; overflow: hidden; }
+        .ad-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* RTL Support */
+        [dir="rtl"] { text-align: right; }
+        [dir="rtl"] .flex-row-reverse-rtl { flex-direction: row-reverse; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-gold selection:text-black">
+
+    <!-- 1. LOADING -->
+    <div id="view-loading" class="fixed inset-0 z-[100] bg-dark flex flex-col items-center justify-center transition-opacity duration-500">
+        <span class="loader"></span>
+        <div class="mt-6 text-gold font-bold tracking-[0.3em] text-xs animate-pulse">VITRINA TAKTAK</div>
+    </div>
+
+    <!-- 2. LANDING PAGE -->
+    <div id="view-landing" class="hidden w-full max-w-lg mx-auto min-h-screen flex flex-col">
+        <nav class="w-full px-6 py-5 flex justify-between items-center z-40 sticky top-0 glass-nav">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='/'">
+                <span class="text-gold text-2xl">⚡</span>
+                <span class="font-bold text-lg tracking-wide">Vitrina<span class="text-gold">.</span></span>
+            </div>
+            
+            <!-- Language Switcher -->
+            <div class="flex items-center gap-3">
+                <button onclick="setLanguage('fr')" id="lang-fr" class="text-xs font-bold text-gold transition">FR</button>
+                <span class="text-gray-600">|</span>
+                <button onclick="setLanguage('ar')" id="lang-ar" class="text-xs font-bold text-gray-500 hover:text-white transition">عربي</button>
+            </div>
+        </nav>
+
+        <main class="flex-1 px-6 pt-10 pb-10 animate-fade-in">
+            <h1 id="lp-title" class="text-5xl font-extrabold mb-6 leading-tight">Hanoutek<br><span class="text-gold">fi Lien.</span></h1>
+            <p id="lp-subtitle" class="text-gray-400 text-sm mb-8 max-w-xs leading-relaxed">
+                La solution e-commerce Tunisienne 🇹🇳. Créez votre catalogue en 2 minutes et recevez vos commandes sur WhatsApp.
+            </p>
+
+            <!-- ADSENSE SLOT 1 -->
+            <div class="ad-container" id="ad-landing-top">
+                <span class="ad-label">Publicité Google</span>
+            </div>
+
+            <!-- Pricing / CTA Card -->
+            <div class="bg-surface rounded-2xl p-6 border border-white/10 shadow-2xl mb-8 relative overflow-hidden group mt-4">
+                <div class="absolute top-0 right-0 bg-gold text-black text-[10px] font-bold px-3 py-1 rounded-bl-xl ltr:rounded-bl-xl rtl:rounded-br-xl rtl:rounded-bl-none">PRO</div>
+                <p id="lp-plan" class="text-[10px] text-gray-500 font-bold tracking-widest uppercase mb-2">ABONNEMENT</p>
+                <div class="flex items-baseline gap-1 mb-6" dir="ltr">
+                    <span class="text-4xl font-bold text-white">30</span>
+                    <span class="text-xl font-bold text-gold">DT</span>
+                    <span class="text-xs text-gray-500">/ mois</span>
+                </div>
+                
+                <!-- PRIMARY BUTTON -->
+                <button onclick="contactSales()" id="btn-launch" class="w-full btn-gold py-4 rounded-xl text-sm mb-4 font-bold">
+                    Lancer ma Boutique
+                </button>
+                
+                <!-- SECONDARY BUTTON (DEMO) - STYLE MATCHED -->
+                <button onclick="window.location.href='/?store=demo'" id="btn-demo" class="w-full btn-gold-outline py-4 rounded-xl text-sm mb-2 font-bold flex justify-center items-center gap-2">
+                    <span>👁️</span> <span id="txt-demo">Voir un exemple</span>
+                </button>
+                
+                <p class="text-center text-[10px] text-gray-600 mt-3">D17 / Flouci / Sobflous</p>
+            </div>
+
+            <!-- ADSENSE SLOT 2 -->
+            <div class="ad-container" id="ad-landing-bottom">
+                <span class="ad-label">Publicité Google</span>
+            </div>
+
+            <!-- Footer Legal -->
+            <footer class="border-t border-white/5 pt-8 text-center pb-8 mt-auto">
+                <p id="footer-about-title" class="text-xs text-white font-bold mb-4">À Propos de Vitrina TakTak</p>
+                <p id="footer-about-text" class="text-[10px] text-gray-500 mb-6 px-4 leading-relaxed">
+                    Plateforme SaaS Tunisienne pour digitaliser le commerce local.
+                </p>
+                <div class="flex flex-wrap justify-center gap-4 text-[10px] text-gray-500 mb-4">
+                    <button onclick="openLegal('privacy')" id="link-privacy" class="hover:text-gold transition">Confidentialité</button>
+                    <button onclick="openLegal('terms')" id="link-terms" class="hover:text-gold transition">Conditions</button>
+                    <button onclick="openLegal('about')" id="link-about" class="hover:text-gold transition">À Propos</button>
+                </div>
+                <p class="text-[10px] text-gray-700">&copy; 2026 Vitrina TakTak SaaS.</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- 3. STORE VIEW -->
+    <div id="view-store" class="hidden w-full max-w-lg mx-auto min-h-screen flex flex-col bg-dark pb-32 animate-fade-in">
+        <header class="sticky top-0 z-30 bg-dark/95 backdrop-blur border-b border-white/5 px-4 py-4 flex justify-between items-center shadow-lg transition-all">
+            <div>
+                <h1 id="store-title" class="font-bold text-white text-lg leading-tight tracking-wide">...</h1>
+                <div id="verified-badge" class="hidden flex items-center gap-1.5 mt-1">
+                    <svg class="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <span class="text-[10px] text-gray-400 font-bold tracking-wider uppercase">Vérifié</span>
+                </div>
+            </div>
+            <div onclick="toggleCart()" class="relative p-2.5 bg-surface border border-white/5 rounded-full cursor-pointer hover:bg-white/10 transition active:scale-95">
+                <span class="text-xl">🛒</span>
+                <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full border-2 border-dark hidden shadow-sm">0</span>
+            </div>
+        </header>
+
+        <!-- ADSENSE SLOT 3 -->
+        <div class="px-4 mt-2">
+            <div class="ad-container" id="ad-store-top">
+                <span class="ad-label">Publicité Google</span>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <main id="products-grid" class="p-4 grid grid-cols-2 gap-3"></main>
+        
+        <div class="mt-auto px-6 py-8 text-center">
+            <!-- ADSENSE SLOT 4 -->
+            <div class="ad-container" id="ad-store-bottom">
+                <span class="ad-label">Publicité Google</span>
+            </div>
+            <a href="/" class="text-[10px] text-gray-600 hover:text-gold transition font-medium">Propulsé par ⚡ Vitrina TakTak</a>
+        </div>
+    </div>
+
+    <!-- 4. 404 NOT FOUND -->
+    <div id="view-404" class="hidden w-full max-w-lg mx-auto min-h-screen flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+        <div class="text-6xl mb-6 grayscale opacity-50">🏚️</div>
+        <h1 class="text-2xl font-bold text-white mb-2">Boutique Introuvable</h1>
+        <p class="text-gray-400 text-sm mb-8 max-w-[250px] mx-auto">Ce magasin n'existe pas ou a été fermé.</p>
+        <a href="/" class="btn-gold py-3 px-8 rounded-xl text-sm shadow-lg w-full max-w-xs font-bold">Créer ma boutique</a>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Legal Modal -->
+    <div id="modal-legal" class="hidden fixed inset-0 z-[60] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-card w-full max-w-lg max-h-[85vh] rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+            <div class="p-5 border-b border-white/10 flex justify-between items-center bg-surface rounded-t-2xl">
+                <h2 id="legal-title" class="font-bold text-lg text-gold">...</h2>
+                <button onclick="document.getElementById('modal-legal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition">✕</button>
+            </div>
+            <div id="legal-content" class="p-6 overflow-y-auto text-sm text-gray-400 leading-7 font-light text-justify"></div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="modal-cart" class="hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-end sm:items-center justify-center">
+        <div class="bg-[#121212] w-full max-w-lg rounded-t-2xl sm:rounded-2xl border-t sm:border border-white/10 p-6 flex flex-col max-h-[90vh] shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+            <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
+                <h2 id="cart-title" class="text-xl font-bold text-white">Votre Panier</h2>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-white text-2xl transition">✕</button>
+            </div>
+            <div id="cart-items" class="overflow-y-auto flex-1 mb-4 space-y-3 pr-1 scrollbar-hide"></div>
+            <div class="pt-4 mt-auto border-t border-white/5">
+                <div class="flex justify-between items-center mb-4 text-sm">
+                    <span id="cart-total-label" class="text-gray-400">Total à payer:</span>
+                    <span id="modal-total" class="text-gold font-bold text-2xl">0.000 DT</span>
+                </div>
+                <button id="btn-whatsapp" class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 text-md transition active:scale-95 shadow-[0_0_20px_rgba(37,211,102,0.2)]">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                    <span id="btn-whatsapp-text">Commander sur WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Cart Bar -->
+    <div id="cart-bar" class="hidden fixed bottom-6 left-4 right-4 z-40 max-w-lg mx-auto animate-fade-in">
+        <div class="bg-surface border border-white/10 p-4 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex justify-between items-center backdrop-blur-md">
+            <div>
+                <p id="bar-label" class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total</p>
+                <p id="bar-total" class="text-white font-bold text-lg">0.000 DT</p>
+            </div>
+            <button onclick="toggleCart()" id="btn-view-cart" class="btn-gold py-2.5 px-6 rounded-lg text-xs font-bold tracking-wide text-black shadow-lg">VOIR PANIER</button>
+        </div>
+    </div>
+
+    <!-- ENGINE -->
+    <script>
+        // CONFIGURATION
+        const CONFIG = {
+            URL: 'https://ibupuyudobgslpqkpetd.supabase.co',
+            KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlidXB1eXVkb2Jnc2xwcWtwZXRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NjIxNjYsImV4cCI6MjA4NjIzODE2Nn0.w8IUxgUayt252HJ_utQDo3YKm_lXmL6TVjf6kNWuwtE',
+            SALES_PHONE: '21622747298'
+        };
+
+        const db = supabase.createClient(CONFIG.URL, CONFIG.KEY);
+
+        // TRANSLATIONS (FR / AR - Tunisian)
+        const i18n = {
+            fr: {
+                title: 'Hanoutek<br><span class="text-gold">fi Lien.</span>',
+                subtitle: 'La solution e-commerce Tunisienne 🇹🇳. Créez votre catalogue en 2 minutes et recevez vos commandes sur WhatsApp.',
+                plan: 'ABONNEMENT',
+                launch: 'Lancer ma Boutique',
+                demo: 'Voir un exemple',
+                aboutTitle: 'À Propos de Vitrina TakTak',
+                aboutText: 'Plateforme SaaS Tunisienne pour digitaliser le commerce local.',
+                privacy: 'Confidentialité',
+                terms: 'Conditions',
+                about: 'À Propos',
+                cartTitle: 'Votre Panier',
+                totalLabel: 'Total à payer:',
+                waBtn: 'Commander sur WhatsApp',
+                barLabel: 'TOTAL',
+                viewCart: 'VOIR PANIER',
+                add: 'AJOUTER',
+                empty: 'Votre panier est vide.'
+            },
+            ar: {
+                title: 'حانوتك<br><span class="text-gold">في رابط.</span>',
+                subtitle: 'الحل رقم 1 للتجارة الإلكترونية في تونس 🇹🇳. حل بوتيك في دقيقتين واستقبل كومنداتك على الواتساب.',
+                plan: 'اشتراك',
+                launch: 'حل حانوتك تو',
+                demo: 'شوف مثال',
+                aboutTitle: 'عن فيترينا تاك تاك',
+                aboutText: 'منصة تونسية باش تعاونك تبيع منتوجاتك بسهولة على الإنترنت.',
+                privacy: 'الخصوصية',
+                terms: 'الشروط',
+                about: 'من نحن',
+                cartTitle: 'قفة المشتريات',
+                totalLabel: 'المجموع:',
+                waBtn: 'عدي الكومند WhatsApp',
+                barLabel: 'المجموع',
+                viewCart: 'شوف القفة',
+                add: 'زيد للقفة',
+                empty: 'القفة فارغة.'
+            }
+        };
+
+        let currentLang = 'fr';
+        const state = { cart: {}, products: [], store: null };
+
+        const els = {
+            loading: document.getElementById('view-loading'),
+            landing: document.getElementById('view-landing'),
+            store: document.getElementById('view-store'),
+            notFound: document.getElementById('view-404'),
+            modalLegal: document.getElementById('modal-legal'),
+            modalCart: document.getElementById('modal-cart'),
+            cartBar: document.getElementById('cart-bar')
+        };
+
+        // INIT
+        window.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('store');
+            
+            // Language Init
+            const savedLang = localStorage.getItem('vt_lang');
+            if(savedLang) setLanguage(savedLang);
+
+            if (!slug) {
+                showView('landing');
+            } else {
+                await loadStore(slug);
+            }
+        });
+
+        // LANGUAGE MANAGER
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('vt_lang', lang);
+            
+            // UI Toggle
+            const frBtn = document.getElementById('lang-fr');
+            const arBtn = document.getElementById('lang-ar');
+            const html = document.documentElement;
+
+            if (lang === 'ar') {
+                html.setAttribute('dir', 'rtl');
+                html.lang = 'ar';
+                frBtn.classList.replace('text-gold', 'text-gray-500');
+                arBtn.classList.replace('text-gray-500', 'text-gold');
+            } else {
+                html.setAttribute('dir', 'ltr');
+                html.lang = 'fr';
+                arBtn.classList.replace('text-gold', 'text-gray-500');
+                frBtn.classList.replace('text-gray-500', 'text-gold');
+            }
+
+            // Text Updates
+            const t = i18n[lang];
+            
+            // Landing
+            if(document.getElementById('lp-title')) {
+                document.getElementById('lp-title').innerHTML = t.title;
+                document.getElementById('lp-subtitle').innerText = t.subtitle;
+                document.getElementById('lp-plan').innerText = t.plan;
+                document.getElementById('btn-launch').innerText = t.launch;
+                document.getElementById('txt-demo').innerText = t.demo;
+                document.getElementById('footer-about-title').innerText = t.aboutTitle;
+                document.getElementById('footer-about-text').innerText = t.aboutText;
+                document.getElementById('link-privacy').innerText = t.privacy;
+                document.getElementById('link-terms').innerText = t.terms;
+                document.getElementById('link-about').innerText = t.about;
+            }
+
+            // Cart / Store UI
+            if(document.getElementById('cart-title')) {
+                document.getElementById('cart-title').innerText = t.cartTitle;
+                document.getElementById('cart-total-label').innerText = t.totalLabel;
+                document.getElementById('btn-whatsapp-text').innerText = t.waBtn;
+                document.getElementById('bar-label').innerText = t.barLabel;
+                document.getElementById('btn-view-cart').innerText = t.viewCart;
+            }
+
+            // Re-render products if store is active to update buttons
+            if (state.store && state.products.length > 0) {
+                renderProducts();
+            }
+        }
+
+        // NAVIGATION & VIEWS
+        function showView(name) {
+            Object.values(els).forEach(el => {
+                if(el && el.id.startsWith('view-')) el.classList.add('hidden');
+            });
+            if(els[name]) els[name].classList.remove('hidden');
+            if(name !== 'loading') {
+                els.loading.style.opacity = '0';
+                setTimeout(() => els.loading.classList.add('hidden'), 500);
+            }
+        }
+
+        // STORE LOGIC
+        async function loadStore(slug) {
+            try {
+                const { data: store, error: sErr } = await db.from('stores').select('*').eq('slug', slug).maybeSingle();
+                if (sErr || !store) throw new Error('Store not found');
+
+                const { data: products } = await db.from('products').select('*').eq('store_slug', slug).eq('is_active', true).order('created_at', { ascending: false });
+
+                state.store = store;
+                state.products = products || [];
+
+                document.getElementById('store-title').innerText = store.name;
+                document.title = `${store.name} | Vitrina TakTak`;
+                
+                if(store.is_verified) document.getElementById('verified-badge').classList.remove('hidden');
+
+                const savedCart = localStorage.getItem(`vt_cart_${slug}`);
+                if(savedCart) state.cart = JSON.parse(savedCart);
+
+                renderProducts();
+                updateCartUI();
+                showView('store');
+
+            } catch (e) {
+                console.error("Load Error:", e);
+                showView('notFound');
+            }
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            const t = i18n[currentLang];
+
+            if(state.products.length === 0) {
+                grid.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-20 text-xs">${t.empty || 'Vide'}</div>`;
+                return;
+            }
+
+            let html = '';
+            state.products.forEach((p, index) => {
+                const qty = state.cart[p.id]?.qty || 0;
+                const price = parseFloat(p.price).toFixed(3);
+                const imgSrc = p.image || 'https://placehold.co/400x400/1a1a1a/FFF?text=No+Img';
+                
+                const btn = qty === 0 
+                    ? `<button onclick="modCart('${p.id}', 1)" class="w-full bg-surface border border-white/10 hover:border-gold hover:text-gold text-white text-[10px] font-bold py-3 rounded-lg transition-all duration-300 shadow-sm uppercase tracking-wide">${t.add}</button>`
+                    : `<div class="flex items-center justify-between bg-black border border-gold rounded-lg h-[38px] px-1 overflow-hidden" dir="ltr"><button onclick="modCart('${p.id}', -1)" class="w-10 h-full text-gold font-bold text-lg hover:bg-gold/10 active:bg-gold/20 transition">-</button><span class="text-white text-xs font-bold select-none">${qty}</span><button onclick="modCart('${p.id}', 1)" class="w-10 h-full text-gold font-bold text-lg hover:bg-gold/10 active:bg-gold/20 transition">+</button></div>`;
+
+                html += `
+                <div class="bg-surface rounded-xl overflow-hidden border border-white/5 shadow-lg flex flex-col h-full hover:border-white/10 transition-colors">
+                    <div class="aspect-square bg-[#111] relative overflow-hidden group">
+                        <img src="${imgSrc}" onerror="this.src='https://placehold.co/400x400/1a1a1a/FFF?text=Error'" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="p-3 flex flex-col flex-1">
+                        <h3 class="text-gray-200 font-medium text-[11px] leading-tight mb-auto line-clamp-2 text-left" dir="auto">${p.name}</h3>
+                        <div class="mt-3">
+                            <p class="text-gold font-bold text-sm mb-2 text-left" dir="ltr">${price} <span class="text-[9px] text-gray-500 font-normal">DT</span></p>
+                            ${btn}
+                        </div>
+                    </div>
+                </div>`;
+
+                if (index === 3) {
+                    html += `<div class="col-span-2 ad-container" id="ad-native-feed"><span class="ad-label">Sponsorisé</span></div>`;
+                }
+            });
+
+            grid.innerHTML = html;
+        }
+
+        function modCart(id, delta) {
+            if(!state.cart[id]) {
+                const p = state.products.find(x => x.id === id);
+                state.cart[id] = { qty: 0, name: p.name, price: p.price };
+            }
+            state.cart[id].qty += delta;
+            if(state.cart[id].qty <= 0) delete state.cart[id];
+            localStorage.setItem(`vt_cart_${state.store.slug}`, JSON.stringify(state.cart));
+            renderProducts(); 
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            let total = 0, count = 0, html = '';
+            for(let id in state.cart) {
+                const item = state.cart[id];
+                total += item.price * item.qty;
+                count += item.qty;
+                html += `<div class="flex justify-between items-center bg-surface p-3 rounded-lg border border-white/5 mb-2 shadow-sm" dir="ltr"><div><div class="text-white text-xs font-bold line-clamp-1 text-left">${item.name}</div><div class="text-gold text-[10px] mt-0.5 text-left">${item.price.toFixed(3)} x ${item.qty}</div></div><div class="flex items-center gap-3"><span class="text-white font-bold text-sm">${(item.price*item.qty).toFixed(3)}</span><button onclick="modCart('${id}', -1)" class="text-red-500/80 hover:text-red-500 font-bold px-2 py-1">✕</button></div></div>`;
+            }
+            const totalStr = total.toFixed(3) + ' DT';
+            document.getElementById('bar-total').innerText = totalStr;
+            document.getElementById('modal-total').innerText = totalStr;
+            
+            const cartList = document.getElementById('cart-items');
+            const t = i18n[currentLang];
+            cartList.innerHTML = html || `<p class="text-center text-gray-500 text-xs py-10">${t.empty}</p>`;
+            
+            const badge = document.getElementById('cart-badge');
+            badge.innerText = count;
+            badge.classList.toggle('hidden', count === 0);
+            
+            if(count > 0) els.cartBar.classList.remove('hidden');
+            else { els.cartBar.classList.add('hidden'); els.modalCart.classList.add('hidden'); }
+
+            if(state.store) {
+                const msg = `👋 *Nouvelle Commande* chez ${state.store.name}\n\n${Object.values(state.cart).map(i => `▪ ${i.qty}x ${i.name}`).join('\n')}\n\n💰 *TOTAL: ${totalStr}*`;
+                document.getElementById('btn-whatsapp').onclick = () => window.open(`https://wa.me/${state.store.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+            }
+        }
+
+        function toggleCart() { els.modalCart.classList.toggle('hidden'); }
+        
+        function contactSales() { 
+            const msg = currentLang === 'ar' ? "Salem, n7eb n7el boutique sur VitrinaTakTak" : "Bonjour, je veux ouvrir une boutique VitrinaTakTak";
+            window.open(`https://wa.me/${CONFIG.SALES_PHONE}?text=${encodeURIComponent(msg)}`, '_blank'); 
+        }
+        
+        // ADSENSE & LEGAL
+        const legalDB = {
+            privacy: { t: 'Politique de Confidentialité', c: '<p class="mb-4"><strong>1. Collecte des données</strong><br>Vitrina TakTak est soucieuse de la protection des données personnelles. Nous ne collectons aucune information personnelle identifiable (PII) sur les visiteurs naviguant sur les boutiques. Aucune inscription n\'est requise pour voir les produits.</p><p class="mb-4"><strong>2. Stockage Local</strong><br>Nous utilisons le "Local Storage" de votre navigateur uniquement pour mémoriser temporairement le contenu de votre panier d\'achat. Ces données restent sur votre appareil et ne sont pas transférées sur nos serveurs.</p><p class="mb-4"><strong>3. Commandes via WhatsApp</strong><br>Lorsque vous validez une commande, les détails (produits et total) sont transférés vers l\'application WhatsApp installée sur votre appareil. À partir de ce moment, les données sont régies par la politique de confidentialité de WhatsApp et celle du vendeur avec qui vous communiquez.</p>' },
+            terms: { t: 'Conditions Générales d\'Utilisation', c: '<p class="mb-4"><strong>1. Objet</strong><br>Vitrina TakTak est une solution SaaS (Software as a Service) permettant aux commerçants tunisiens de créer des catalogues produits simplifiés.</p><p class="mb-4"><strong>2. Responsabilité</strong><br>Vitrina TakTak agit en tant que prestataire technique. Nous n\'avons aucun contrôle sur la qualité, la conformité ou la légalité des produits vendus par les boutiques hébergées sur notre plateforme. Chaque vendeur est seul responsable de ses transactions.</p><p class="mb-4"><strong>3. Interdictions</strong><br>Il est strictement interdit d\'utiliser Vitrina TakTak pour vendre des produits illégaux, contrefaits ou dangereux selon la loi tunisienne. Nous nous réservons le droit de supprimer sans préavis toute boutique ne respectant pas ces règles.</p>' },
+            about: { t: 'Qui sommes-nous ?', c: '<p class="mb-4"><strong>Notre Mission</strong><br>Vitrina TakTak a été créée avec un objectif simple : démocratiser l\'e-commerce en Tunisie. Nous savons que la création de sites web est complexe et coûteuse. Notre solution permet à n\'importe quel vendeur, du petit artisan au grand commerçant, de digitaliser son activité en quelques secondes.</p><p class="mb-4"><strong>Innovation</strong><br>Nous misons sur la simplicité. Pas de panier complexe, pas de paiement par carte bancaire compliqué. Nous connectons directement le catalogue au canal de vente le plus populaire en Tunisie : WhatsApp.</p><p><strong>Contact</strong><br>Pour toute question ou partenariat : contact@vitrinataktak.store</p>' }
+        };
+
+        function openLegal(key) {
+            document.getElementById('legal-title').innerText = legalDB[key].t;
+            document.getElementById('legal-content').innerHTML = legalDB[key].c;
+            els.modalLegal.classList.remove('hidden');
+        }
+    </script>
+</body>
+  </html>
